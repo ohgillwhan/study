@@ -136,3 +136,8 @@ producer가 메세지를 쓰고, consumer가 메세지를 읽는 건 오로지 l
 ###나머지 follower들의 역할은?
 나머지 follower들은 leader와 싱크를 항상 맞춘다. 
 해당 option이 있다. 혹시나 leader가 죽었을 경우, 나머지 follower중에 하나가 leader로 선출되어서 메세지의 쓰고/읽는 것을 처리한다.
+
+데이터 출처 : 
+https://medium.com/@umanking/%EC%B9%B4%ED%94%84%EC%B9%B4%EC%97%90-%EB%8C%80%ED%95%B4%EC%84%9C-%EC%9D%B4%EC%95%BC%EA%B8%B0-%ED%95%98%EA%B8%B0%EC%A0%84%EC%97%90-%EB%A8%BC%EC%A0%80-data%EC%97%90-%EB%8C%80%ED%95%B4%EC%84%9C-%EC%9D%B4%EC%95%BC%EA%B8%B0%ED%95%B4%EB%B3%B4%EC%9E%90-d2e3ca2f3c2
+
+https://epicdevs.com/17
