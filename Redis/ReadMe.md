@@ -2,7 +2,8 @@
 ## Redis란 무엇인가?
 레디스(Redis)는 고성능 key-value 저장소로서 List, Hash, Set, SortedSet 등 여러 형식의 자료구조를 지원하는 In Memory형태의 NoSQL입니다.  
 메모리에 상주하면서 RDBMS의 캐시 솔루션으로서 주로 사용되며 라인, 삼성전자, 네이버, Stackoverflow, 인스타그램 등 여러 IT 대기업에서도 사용하는 검증된 오픈소스 솔루션입니다.  
-해당 Redis C언어 기반으로 작성이 되어있습니다.
+해당 Redis C언어 기반으로 작성이 되어있습니다.  
+Redis는 싱글쓰레드로 실행이 된다.
 ## Key/Value Store
 Redis는 기본적으로 Key/Value 형태이다.  
 특정 키 값에 값을 저장하는 구조로 되어 있으며 기본적인 PUT/GET Operation을 지원한다.
