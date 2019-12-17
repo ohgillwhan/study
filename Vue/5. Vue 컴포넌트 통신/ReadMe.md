@@ -8,7 +8,7 @@
 - 상위에서 하위로 값을 전달하려면 props 속성을 사용한다.
 # Props 설명
 - props 변수 명명을 카멜기법으로 하면 html에서 접근은 케밥 기법(-) 으로 가야한다.  
-`
+```javascript
 Vue.componenet('child-component', {
     props: ['passedData'],  
     template: '<p>{{passedData}}</p>'  
@@ -19,7 +19,9 @@ var app = new Vue({
         message: 'Hello Vue! from Parent Componenet'
     }
 })
+```
+```html
 <div id='app'>
-    <child-component v-bind:passed-data="message"></child-component>
+    <child-component va-bind:passed-data="message"></child-component>
 </div>
-`
+```
