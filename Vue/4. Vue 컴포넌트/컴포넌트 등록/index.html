@@ -1,0 +1,26 @@
+<html>
+<head>
+    <title>Vue Sample</title>
+</head>
+<body>
+<div id="app">
+    <button>안녕!</button>
+    <my-component></my-component>
+    <my-component2></my-component2>
+</div>
+
+<script src="https://kr.vuejs.org/js/vue.js"></script>
+<script>
+    Vue.component('my-component', {
+        template:"<span style='color:red'>마이컴퍼넌트</span>"
+    })
+
+    Vue.component('my-component2', {
+        template:"<span style='color:blue'>마이컴퍼넌트2</span>"
+    })
+    new Vue({
+        el:"#app"
+    })
+</script>
+</body>
+</html>
