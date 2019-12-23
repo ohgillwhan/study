@@ -1,0 +1,26 @@
+<html>
+<head>
+    <title>Vue Sample</title>
+</head>
+<body>
+<div id="app">
+    <button>안녕!</button>
+    <my-component v-bind:hello-message="message"></my-component>
+    <my-component hello-message="안녕하느냐!"></my-component>
+</div>
+
+<script src="https://kr.vuejs.org/js/vue.js"></script>
+<script>
+    Vue.component('my-component', {
+        props:['helloMessage'],
+        template:"<span style='color:red'>{{helloMessage}}</span>"
+    })
+    new Vue({
+        el:"#app",
+        data: {
+            message:"안녕~!"
+        }
+    })
+</script>
+</body>
+</html>
