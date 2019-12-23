@@ -1,0 +1,40 @@
+<html>
+<head>
+    <title>Vue Sample</title>
+</head>
+<body>
+    <div id="app">
+        {{name}}
+        <img v-bind:src="isSmile ? smile : sad"/>
+        <a href="#" onclick="app.isSmile = true">Smile</a>
+        <a href="#" onclick="app.isSmile = false">Sad</a>
+        <h4 v-if="isSmile">웃는다!</h4>
+        <h4 v-if="!isSmile">운다!</h4>
+        <my-componenet></my-componenet>
+        <local-component></local-component>
+
+        {{ Date() }}
+    </div>
+<script src="https://kr.vuejs.org/js/vue.js"></script>
+<script>
+    Vue.component("my-componenet", {
+       template : "<h3>hello!</h3>"
+    });
+    var localComponenet = {
+        template : "<h2>local!!</h2>"
+    }
+    var app = new Vue({
+        el : '#app',
+        data : {
+            name : '오길환',
+            isSmile : true,
+            'smile' : 'https://a.disquscdn.com/get?url=http%3A%2F%2Fimgur.com%2FHjgUCHF.png&key=UaC8PCAmgjojw7XnZcEBtw&w=800&h=758',
+            'sad' : 'https://a.disquscdn.com/get?url=https%3A%2F%2Fih0.redbubble.net%2Fimage.437583177.0368%2Fap%2C550x550%2C16x12%2C1%2Ctransparent%2Ct.png&key=ftYu39biUkio9ngcqIvA9w&w=800&h=413'
+        },
+        components: {
+            "local-component" : localComponenet
+        }
+    });
+</script>
+</body>
+</html>
