@@ -1,0 +1,35 @@
+POST http://localhost:9200/movie/_search?size=0
+Content-Type: application/json
+
+{
+  "aggs": {
+    "genre": {
+      "terms": {
+        "field": "genreAlt"
+      }
+    }
+  }
+}
+
+### 2 버킷 안에 버킷으로 계층화를 시도한다
+POST http://localhost:9200/movie/_search?size=0
+Content-Type: application/json
+
+{
+  "aggs": {
+    "genre": {
+      "terms": {
+        "field": "genreAlt"
+      },
+      "aggs": {
+        "nation": {
+          "terms": {
+            "field": "nationAlt"
+          }
+        }
+      }
+    }
+  }
+}
+
+###

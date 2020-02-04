@@ -1,0 +1,25 @@
+### 스키마리스를 활용하여 문서를 생성하여 스키마를 생성해보기
+PUT http://localhost:9200/movie/_doc/1
+Content-Type: application/json
+
+{
+  "movieCd": "1",
+  "movieNm": "살아남은 아이",
+  "movieNmEn": "Last Child",
+  "prdtYear": "2017",
+  "openDt": "",
+  "typeNm": "장편",
+  "prdtStatNm": "기타",
+  "nationAlt": "한국",
+  "genreAlt": "드라마,가족",
+  "repNationNm": "한국",
+  "repGenreNm": "드라마"
+}
+
+### 스키마리스로 생성된 문서를 확인해보기
+GET http://localhost:9200/movie
+
+### 생성된 인덱스 삭제하기
+DELETE http://localhost:9200/movie
+
+###

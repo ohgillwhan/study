@@ -1,0 +1,55 @@
+### 1. 문서 생성하기
+POST http://localhost:9200/movie/_doc/1
+Content-Type: application/json
+
+{
+  "movieCd": "1",
+  "movieNm": "살아남은 아이",
+  "movieNmEn": "Last Child",
+  "prdtYear": "2017",
+  "openDt": "2019-11-11",
+  "typeNm": "장편",
+  "prdtStatNm": "기타",
+  "nationAlt": "한국",
+  "genreAlt": "드라마,가족",
+  "repNationNm": "한국",
+  "repGenreNm": "드라마"
+}
+### 2. 아이디 지정 없이 생성하기
+POST http://localhost:9200/movie/_doc/
+Content-Type: application/json
+
+{
+  "movieCd": "1",
+  "movieNm": "살아남은 아이",
+  "movieNmEn": "Last Child",
+  "prdtYear": "2017",
+  "openDt": "2019-11-11",
+  "typeNm": "장편",
+  "prdtStatNm": "기타",
+  "nationAlt": "한국",
+  "genreAlt": "드라마,가족",
+  "repNationNm": "한국",
+  "repGenreNm": "드라마"
+}
+
+### 3. Id의 값을 주어 데이터를 가져온다
+GET http://localhost:9200/movie/_doc/1
+
+### 4. URI에 검색조건을 포함하여 문서 조회하기
+GET http://localhost:9200/movie/_doc/_search?q=typeNm:장편&pretty=true
+
+### 4. ResponseBody 검색조건을 사용하여 문서 조회하기
+GET http://localhost:9200/movie/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "term": {"typeNm" :  "장편"}
+  }
+}
+
+### 4. 문서 수정하기
+DELETE http://localhost:9200/movie/_doc/1
+
+### 5. 문서 삭제하
