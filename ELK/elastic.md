@@ -48,11 +48,41 @@ GET <index>/_source/<_id>
 HEAD <index>/_source/<_id>  
 
 GET 는 데이터를 가져오지만 HEAD는 존재여부만 갖고온다  
-bool과 match/range등의 차이는 bool은 여러개의 조합이 가능하다.  
+bool과 match/range등의 차이는 bool은 여러개의 조합이 가능하다.
+
+간단하게 bool은 데이터 한 건당 하나의 query를 날리는것이라 보면 편할것 같다.  
+must 묶음은 전부다 true여야 true가 return 되는듯 하다.  
+그래서 아래와 같은경운 agent와 bytes와 그밑에 bool이 새로운 쿼리처럼 한개로 보면 될듯하다.  
+should로 아이피중 한개만 맞을경우 거기서 true를 반환할것이고. 그러면은 3개다 true일 경우 must가 맞게된다.  
+```http request
+GET /kibana_sample_data_logs/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {"match": {"agent": "Firefox"}},
+        {"range": { "bytes": { "gte": 6000, "lte": 7000}}},
+        {"bool": {
+            "should": [
+              {"match": {"ip": "15.157.237.110"}},
+              {"match": {"ip": "223.87.60.27"}}
+            ]
+          }
+        }
+      ],
+      "must_not": [
+        {"match": {"extension": "css"}}
+      ]
+    }
+  },
+  "size": 10000
+}
+```  
 ## 가져오기
 GET my-index-000001/_doc/0?_source_includes=*.id&_source_excludes=entities  
 파라미터로 source include와 exclude를 지정한다  
 만약 source=false로 줄경우 source는 안가져온다  
+
 
 모든 데이터 검색 (score가 1.0으로 나옴)  
 ```http request
@@ -204,3 +234,77 @@ GET /kibana_sample_data_logs/_search
 }
 
 ```
+must와 should를 같이 쓰는 방법.  
+minimum_should_match를 수정하면 된다.  
+agent = 'Firefox' and bytes between 6000 and 8000 and (ip = '...' or ip = '') and extension != 'css'  
+should,must가 동시에 있으면 값은 default가 0 이며 그외는 1이다  
+```http request
+GET /kibana_sample_data_logs/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {"match": {"agent": "Firefox"}},
+        {"range": { "bytes": { "gte": 6000, "lte": 7000}}}
+      ]
+      , "should": [
+        {"match": {"ip": "15.157.237.110"}},
+        {"match": {"ip": "223.87.60.27"}}
+      ], 
+      "must_not": [
+        {"match": {"extension": "css"}}
+      ],
+      "minimum_should_match": 1
+    }
+  },
+  "size": 10000
+}
+
+#-- 이게 더 깔끔한듯
+GET /kibana_sample_data_logs/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {"match": {"agent": "Firefox"}},
+        {"range": { "bytes": { "gte": 6000, "lte": 7000}}},
+        {"bool": {
+            "should": [
+              {"match": {"ip": "15.157.237.110"}},
+              {"match": {"ip": "223.87.60.27"}}
+            ]
+          }
+        }
+      ],
+      "must_not": [
+        {"match": {"extension": "css"}}
+      ]
+    }
+  },
+  "size": 10000
+}
+```
+
+### fields
+매핑하는것인다 "city" 라는 컬럼에 서브 컬럼을 빼는 형식이다
+city.raw로  
+It is often useful to index the same field in different ways for different purposes. This is the purpose of multi-fields. For instance, a string field could be mapped as a text field for full-text search, and as a keyword field for sorting or aggregations:  
+
+```http request
+PUT my-index-000001
+{
+  "mappings": {
+    "properties": {
+      "city": {
+        "type": "text",
+        "fields": {
+          "raw": { 
+            "type":  "keyword"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
