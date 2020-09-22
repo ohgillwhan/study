@@ -76,3 +76,194 @@ Passive 방식은 주기적으로 key들을 Random으로 100개만 스캔하여 
 
 #참고한 자료
 https://bcho.tistory.com/654
+
+
+
+
+# REDIS CLUSTER
+Cluster 를 이용해서 샤딩을 하고, replica 설정이 가능하다.  
+컴파일 기준으로 
+http://download.redis.io/releases/redis-6.0.8.tar.gz?_ga=2.206298003.1639891242.1600775998-1422365930.1595511361  
+다운로드 후, make && make install을 진행한다음에  
+vi ./redis.conf를 하면은 포트 수정이 가능하고, 그 밑에 cluster-enable이 주석이 되어있는데 해제해주면은 클러스터 적용이 가능하다.  
+그리고 클러스터 생성은 아래의 명령어로 가능하다.  
+redis-cli --cluster create ip:port ip:port ip:port  
+그리고 replica를 만들려면 --cluster-replicas 갯수를 하면 아래와 같이 뜬다  
+```java
+➜  src ./redis-cli --cluster create 127.0.0.1:6300 127.0.0.1:6301 127.0.0.1:6302 127.0.0.1:7300 127.0.0.1:7301 127.0.0.1:7302 --cluster-replicas 1
+>>> Performing hash slots allocation on 6 nodes...
+
+Master[0] -> Slots 0 - 5460
+Master[1] -> Slots 5461 - 10922
+Master[2] -> Slots 10923 - 16383
+Adding replica 127.0.0.1:7301 to 127.0.0.1:6300
+Adding replica 127.0.0.1:7302 to 127.0.0.1:6301
+Adding replica 127.0.0.1:7300 to 127.0.0.1:6302
+>>> Trying to optimize slaves allocation for anti-affinity
+[WARNING] Some slaves are in the same host as their master
+M: 0f6619d731e56c09048f4ab432c3670861d31136 127.0.0.1:6300
+   slots:[0-5460] (5461 slots) master
+M: a2889b0c93c75afe9e18d7df660b41cb3c3d08e6 127.0.0.1:6301
+   slots:[5461-10922] (5462 slots) master
+M: 79b39c5961a137977c0ccb6d127ece51483c2adc 127.0.0.1:6302
+   slots:[10923-16383] (5461 slots) master
+S: d2e609a5789eea76f2d351036e3440c2e53bc386 127.0.0.1:7300
+   replicates a2889b0c93c75afe9e18d7df660b41cb3c3d08e6
+S: ae90d19c86b0f18d09965a5ac463514bff8d53f3 127.0.0.1:7301
+   replicates 79b39c5961a137977c0ccb6d127ece51483c2adc
+S: 5583ef36834624ad3747e6c3d4c5c90f01828296 127.0.0.1:7302
+   replicates 0f6619d731e56c09048f4ab432c3670861d31136
+
+```
+yes를 누르면 클러스터링이 된다.  
+그리고 redis-cli -c -p 로 접속하면 된다.  
+cluster가 잘 되는지 명령어를 떄리면 아래와 같이 뜬다  
+```java
+➜  src redis-cli -c -p 6300
+127.0.0.1:6300> set a 1
+-> Redirected to slot [15495] located at 127.0.0.1:6302
+OK
+127.0.0.1:6302> set b 1
+-> Redirected to slot [3300] located at 127.0.0.1:6300
+OK
+127.0.0.1:6300> set c 1
+-> Redirected to slot [7365] located at 127.0.0.1:6301
+OK
+127.0.0.1:6301> set d 1
+-> Redirected to slot [11298] located at 127.0.0.1:6302
+OK
+// 6300
+127.0.0.1:6300> keys *
+1) "b"
+// 6301
+127.0.0.1:6301> keys *
+1) "c"
+// 6302
+127.0.0.1:6302> keys *
+1) "a"
+2) "d"
+```
+
+만약에 item_{item_id}_{comment}의 경우 item_id와 같은애들은 같은 샤드에 저장하려면은 hashtag 라는 기능을 쓰면 된다  
+## hashtag
+hashtag는 {} 사이에 데이터를 넣어주면 된다  
+예를들어 1번의 아이템의 comment들은 같은 shard에 구성하려면 아래와 같이  
+item_{1}_1,item_{1}_2,item_{1}_3,item_{1}_4,item_{1}_5  
+아래는 예제다
+```java
+127.0.0.1:6300> set item_{1}_1 1
+-> Redirected to slot [9842] located at 127.0.0.1:6301
+OK
+127.0.0.1:6301> set item_{1}_2 1
+OK
+127.0.0.1:6301> set item_{1}_3 1
+OK
+127.0.0.1:6301> set item_{1}_4 1
+OK
+127.0.0.1:6301> set item_{3}_1 1
+-> Redirected to slot [1584] located at 127.0.0.1:6300
+OK
+127.0.0.1:6300> set item_{3}_2 1
+OK
+127.0.0.1:6300> set item_{3}_3 1
+OK
+127.0.0.1:6300> set item_{2}_3 1
+-> Redirected to slot [5649] located at 127.0.0.1:6301
+OK
+127.0.0.1:6301> set item_{4}_3 1
+-> Redirected to slot [14039] located at 127.0.0.1:6302
+OK
+127.0.0.1:6302> set item_{4}_a5 1
+OK
+127.0.0.1:6302> set item_{4}_6 1
+OK
+
+// 6300
+127.0.0.1:6300> keys *
+1) "item_{3}_3"
+2) "item_{3}_2"
+3) "item_{3}_1"
+// 6301
+127.0.0.1:6301> keys *
+1) "item_{1}_2"
+2) "item_{1}_3"
+3) "item_{1}_4"
+4) "item_{2}_3"
+5) "item_{1}_1"
+// 6302
+127.0.0.1:6302> keys *
+1) "item_{4}_6"
+2) "item_{4}_a5"
+3) "item_{4}_3"
+```
+
+## 만약에 마스터를 죽였을경우?
+마스터를 죽이면은 어느정도 시간이 지난다음에 slave가 master가 승격이 되며, 기존 master가 살아나면 기존 master는 slave로 구성된다  
+### 슬레이브 로그
+```java
+3897:S 22 Sep 2020 21:16:28.646 # Connection with master lost.
+3897:S 22 Sep 2020 21:16:28.646 * Caching the disconnected master state.
+3897:S 22 Sep 2020 21:16:29.045 * Connecting to MASTER 127.0.0.1:6301
+3897:S 22 Sep 2020 21:16:29.045 * MASTER <-> REPLICA sync started
+3897:S 22 Sep 2020 21:16:29.045 # Error condition on socket for SYNC: Operation now in progress
+3897:S 22 Sep 2020 21:16:46.435 # Error condition on socket for SYNC: Operation now in progress
+3897:S 22 Sep 2020 21:16:47.458 * Connecting to MASTER 127.0.0.1:6301
+3897:S 22 Sep 2020 21:16:47.458 * MASTER <-> REPLICA sync started
+3897:S 22 Sep 2020 21:16:47.458 # Error condition on socket for SYNC: Operation now in progress
+3897:S 22 Sep 2020 21:16:47.970 * Marking node a2889b0c93c75afe9e18d7df660b41cb3c3d08e6 as failing (quorum reached).
+3897:S 22 Sep 2020 21:16:47.971 # Start of election delayed for 663 milliseconds (rank #0, offset 1362).
+3897:S 22 Sep 2020 21:16:47.971 # Cluster state changed: fail
+3897:S 22 Sep 2020 21:16:48.480 * Connecting to MASTER 127.0.0.1:6301
+3897:S 22 Sep 2020 21:16:48.481 * MASTER <-> REPLICA sync started
+3897:S 22 Sep 2020 21:16:48.481 # Error condition on socket for SYNC: Operation now in progress
+3897:S 22 Sep 2020 21:16:48.689 # Starting a failover election for epoch 7.
+3897:S 22 Sep 2020 21:16:48.691 # Failover election won: I'm the new master.
+3897:S 22 Sep 2020 21:16:48.691 # configEpoch set to 7 after successful failover
+3897:M 22 Sep 2020 21:16:48.691 * Discarding previously cached master state.
+3897:M 22 Sep 2020 21:16:48.691 # Setting secondary replication ID to d8bc351892e69da60406e78f439992423c6c8571, valid up to offset: 1363. New replication ID is 18d91bbdbb5c0a46281711443ffc94b4e97fb0fd
+3897:M 22 Sep 2020 21:16:48.691 # Cluster state changed: ok
+```
+기존 slave인 7300은 master가 된다  
+redis-cli -c -p 들어간 후 cluster nodes 치면은 나온다.  
+```java
+➜  src redis-cli -c -p 7300
+127.0.0.1:7300> cluster nodes
+d2e609a5789eea76f2d351036e3440c2e53bc386 127.0.0.1:7300@17300 myself,master - 0 1600777523000 7 connected 5461-10922
+ae90d19c86b0f18d09965a5ac463514bff8d53f3 127.0.0.1:7301@17301 slave 79b39c5961a137977c0ccb6d127ece51483c2adc 0 1600777523757 3 connected
+5583ef36834624ad3747e6c3d4c5c90f01828296 127.0.0.1:7302@17302 slave 0f6619d731e56c09048f4ab432c3670861d31136 0 1600777522000 1 connected
+0f6619d731e56c09048f4ab432c3670861d31136 127.0.0.1:6300@16300 master - 0 1600777523000 1 connected 0-5460
+79b39c5961a137977c0ccb6d127ece51483c2adc 127.0.0.1:6302@16302 master - 0 1600777524786 3 connected 10923-16383
+a2889b0c93c75afe9e18d7df660b41cb3c3d08e6 127.0.0.1:6301@16301 master,fail - 1600776989964 1600776987000 2 disconnected
+```  
+그리고 기존 6301번을 살리면은 slave가 된다  
+```java
+d2e609a5789eea76f2d351036e3440c2e53bc386 127.0.0.1:7300@17300 myself,master - 0 1600777569000 7 connected 5461-10922
+ae90d19c86b0f18d09965a5ac463514bff8d53f3 127.0.0.1:7301@17301 slave 79b39c5961a137977c0ccb6d127ece51483c2adc 0 1600777570000 3 connected
+5583ef36834624ad3747e6c3d4c5c90f01828296 127.0.0.1:7302@17302 slave 0f6619d731e56c09048f4ab432c3670861d31136 0 1600777569000 1 connected
+0f6619d731e56c09048f4ab432c3670861d31136 127.0.0.1:6300@16300 master - 0 1600777570000 1 connected 0-5460
+79b39c5961a137977c0ccb6d127ece51483c2adc 127.0.0.1:6302@16302 master - 0 1600777571843 3 connected 10923-16383
+a2889b0c93c75afe9e18d7df660b41cb3c3d08e6 127.0.0.1:6301@16301 slave d2e609a5789eea76f2d351036e3440c2e53bc386 0 1600777570823 7 connected
+```
+
+## cluster lua script
+cluster는 key로 기준으로 cluster가 된다.  
+첫번쨰 키로 slot이 계산된다 한다.  
+만약 자기에 맞지않은 key일경우 에러가 표시된다.  
+아래가 그런경우다    
+```java
+127.0.0.1:7300> EVAL "return redis.call('set','key','value')" 0
+(error) ERR Error running script (call to f_1b3037549b5751fc7635c7d7c556cf458cf50c47): @user_script:1: @user_script: 1: Lua script attempted to access a non local key in a cluster node
+127.0.0.1:7300> EVAL "return redis.call('set','key1','value')" 0
+OK
+```
+하지만 파라미터로 넘겨서 실행하면은 문제가 없다  
+```java
+127.0.0.1:6300> EVAL "return redis.call('set',KEYS[1],'value')" 1 'E'
+-> Redirected to slot [6241] located at 127.0.0.1:7300
+OK
+127.0.0.1:7300> EVAL "return redis.call('set',KEYS[1],'value')" 1 'F'
+OK
+127.0.0.1:7300> EVAL "return redis.call('set',KEYS[1],'value')" 1 'G'
+-> Redirected to slot [14371] located at 127.0.0.1:6302
+OK
+```
