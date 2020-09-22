@@ -54,6 +54,17 @@ bool과 match/range등의 차이는 bool은 여러개의 조합이 가능하다.
 must 묶음은 전부다 true여야 true가 return 되는듯 하다.  
 그래서 아래와 같은경운 agent와 bytes와 그밑에 bool이 새로운 쿼리처럼 한개로 보면 될듯하다.  
 should로 아이피중 한개만 맞을경우 거기서 true를 반환할것이고. 그러면은 3개다 true일 경우 must가 맞게된다.  
+
+아주 간단하게 bool은 아래와같다.  
+boolQuery가 true면(내부에 있는 조건문 전부가 true면) 표출한다  
+```java
+for(Item item : Items) {
+    if(item.boolQuery()) {
+        Print(item);
+    }
+}
+```
+
 ```http request
 GET /kibana_sample_data_logs/_search
 {
@@ -74,6 +85,7 @@ GET /kibana_sample_data_logs/_search
         {"match": {"extension": "css"}}
       ]
     }
+
   },
   "size": 10000
 }
